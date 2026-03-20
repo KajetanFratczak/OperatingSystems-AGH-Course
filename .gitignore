@@ -1,0 +1,15 @@
+# Skompilowane pliki obiektowe i binarne
+*.o
+*.out
+*.exe
+
+# Archiwa
+*.tar
+*.tar.gz
+*.zip
+
+# Foldery IDE i buildów
+.idea/
+cmake-build-debug/
+cmake-build-release/
+CMakeCache.txt

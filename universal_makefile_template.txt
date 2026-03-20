@@ -1,0 +1,95 @@
+##############################################################
+# Uniwersalny szablon Makefile                               #
+# Możesz dostosować ten szablon do dowolnego projektu w C/C++#
+##############################################################
+
+# Kompilator i flagi
+CC = gcc                # Kompilator C
+CXX = g++               # Kompilator C++ (odkomentuj jeśli potrzebny)
+CFLAGS = -Wall -std=c17 # Flagi dla kompilatora C
+#CXXFLAGS = -Wall -std=c++17 # Flagi dla kompilatora C++ (odkomentuj jeśli potrzebny)
+
+# Optymalizacja i debugowanie (odkomentuj jedną z opcji)
+#CFLAGS += -O2          # Optymalizacja kodu
+#CFLAGS += -g           # Informacje do debugowania
+
+# Katalogi projektu
+SRC_DIR = src           # Katalog ze źródłami
+INC_DIR = include       # Katalog z plikami nagłówkowymi
+BUILD_DIR = build       # Katalog na pliki obiektowe
+BIN_DIR = bin           # Katalog na pliki wykonywalne
+LIB_DIR = lib           # Katalog na biblioteki
+
+# Nazwa głównego programu
+EXEC = program
+
+# Nazwa biblioteki (bez przedrostka lib i rozszerzenia)
+LIB_NAME = mylib
+
+# Pliki źródłowe (automatycznie znajduje wszystkie pliki .c w SRC_DIR)
+SRCS = $(wildcard $(SRC_DIR)/*.c)
+# SRCS_CPP = $(wildcard $(SRC_DIR)/*.cpp) # Dla C++ (odkomentuj jeśli potrzebne)
+
+# Pliki obiektowe generowane z plików źródłowych
+OBJS = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
+# OBJS_CPP = $(SRCS_CPP:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o) # Dla C++ (odkomentuj jeśli potrzebne)
+
+# Ścieżki dla kompilatora
+INC_FLAGS = -I$(INC_DIR)
+LIB_FLAGS = -L$(LIB_DIR)
+
+# Biblioteki do linkowania (odkomentuj lub dodaj potrzebne)
+#LIBS = -lm           # Biblioteka matematyczna
+#LIBS += -lpthread    # Biblioteka wątków POSIX
+#LIBS += -ldl         # Biblioteka dynamicznego ładowania
+
+# Utwórz katalogi jeśli nie istnieją
+MKDIR_P = mkdir -p
+
+#############################################################
+# Reguły
+#############################################################
+
+# Domyślny cel
+all: directories $(BIN_DIR)/$(EXEC)
+
+# Tworzenie katalogów
+directories:
+	$(MKDIR_P) $(BUILD_DIR) $(BIN_DIR) $(LIB_DIR)
+
+# Reguła dla kompilacji plików .c do plików obiektowych .o
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) $(INC_FLAGS) -c $< -o $@
+
+# Linkowanie wszystkich plików obiektowych do pliku wykonywalnego
+$(BIN_DIR)/$(EXEC): $(OBJS)
+	$(CC) $(OBJS) -o $@ $(LIB_FLAGS) $(LIBS)
+
+# Tworzenie biblioteki statycznej
+static_lib: $(OBJS)
+	ar rcs $(LIB_DIR)/lib$(LIB_NAME).a $(OBJS)
+
+# Tworzenie biblioteki współdzielonej
+shared_lib: $(OBJS)
+	$(CC) -shared -fPIC $(OBJS) -o $(LIB_DIR)/lib$(LIB_NAME).so
+
+# Instalacja (umieszczenie bibliotek i programu we właściwych katalogach systemowych)
+install: all
+	cp $(BIN_DIR)/$(EXEC) /usr/local/bin/
+	cp $(LIB_DIR)/lib$(LIB_NAME).* /usr/local/lib/
+	cp $(INC_DIR)/*.h /usr/local/include/
+
+# Czyszczenie
+clean:
+	rm -rf $(BUILD_DIR)/*.o $(BIN_DIR)/$(EXEC) $(LIB_DIR)/*
+
+# Głębokie czyszczenie (usuwa też katalogi)
+distclean: clean
+	rm -rf $(BUILD_DIR) $(BIN_DIR) $(LIB_DIR)
+
+# Uruchomienie programu
+run: all
+	./$(BIN_DIR)/$(EXEC)
+
+# Cele, które nie są plikami
+.PHONY: all clean distclean run install directories static_lib shared_lib
